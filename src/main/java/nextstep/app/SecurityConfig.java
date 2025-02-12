@@ -5,8 +5,7 @@ import nextstep.app.domain.MemberRepository;
 import nextstep.security.authentication.AuthenticationException;
 import nextstep.security.authentication.BasicAuthenticationFilter;
 import nextstep.security.authentication.UsernamePasswordAuthenticationFilter;
-import nextstep.security.authorization.CheckAuthenticationFilter;
-import nextstep.security.authorization.SecuredAspect;
+import nextstep.security.authorization.AuthorizationFilter;
 import nextstep.security.authorization.SecuredMethodInterceptor;
 import nextstep.security.config.DefaultSecurityFilterChain;
 import nextstep.security.config.DelegatingFilterProxy;
@@ -22,7 +21,7 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import java.util.List;
 import java.util.Set;
 
-@EnableAspectJAutoProxy
+@EnableAspectJAutoProxy // 이거 왜 설정하는거지? 자동으로 되지 않나
 @Configuration
 public class SecurityConfig {
 
@@ -58,7 +57,7 @@ public class SecurityConfig {
                         new SecurityContextHolderFilter(),
                         new UsernamePasswordAuthenticationFilter(userDetailsService()),
                         new BasicAuthenticationFilter(userDetailsService()),
-                        new CheckAuthenticationFilter()
+                        new AuthorizationFilter()
                 )
         );
     }
