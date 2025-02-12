@@ -3,11 +3,13 @@ package nextstep.app.ui;
 import nextstep.app.domain.Member;
 import nextstep.app.domain.MemberRepository;
 import nextstep.security.authorization.Secured;
+import nextstep.security.context.SecurityContextHolder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 public class MemberController {
@@ -30,4 +32,13 @@ public class MemberController {
         List<Member> members = memberRepository.findAll();
         return ResponseEntity.ok(members);
     }
+
+    @GetMapping("/members/me")
+    public ResponseEntity<Member> getMember() {
+        String email = (String)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Optional<Member> member = memberRepository.findByEmail(email);
+        return member.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
 }

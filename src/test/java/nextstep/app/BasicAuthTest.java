@@ -1,6 +1,5 @@
 package nextstep.app;
 
-import nextstep.app.domain.Member;
 import nextstep.app.domain.MemberRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -14,16 +13,15 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.util.Base64;
-import java.util.Set;
 
+import static nextstep.app.UserTestFixture.TEST_ADMIN_MEMBER;
+import static nextstep.app.UserTestFixture.TEST_USER_MEMBER;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 class BasicAuthTest {
-    private final Member TEST_ADMIN_MEMBER = new Member("a@a.com", "password", "a", "", Set.of("ADMIN"));
-    private final Member TEST_USER_MEMBER = new Member("b@b.com", "password", "b", "", Set.of());
 
     @Autowired
     private MockMvc mockMvc;
@@ -89,4 +87,46 @@ class BasicAuthTest {
 
         response.andExpect(status().isUnauthorized());
     }
+
+    @DisplayName("일반 사용자가 요청할 경우 자기 회원 정보를 조회할 수 있다.")
+    @Test
+    void request_success_member_me() throws Exception {
+        String token = Base64.getEncoder()
+                .encodeToString((TEST_USER_MEMBER.getEmail() + ":" + TEST_USER_MEMBER.getPassword()).getBytes());
+
+        ResultActions response = mockMvc.perform(get("/members/me")
+                .header("Authorization", "Basic " + token)
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+        );
+
+        response.andExpect(status().isOk());
+    }
+
+    @DisplayName("인증되지 않은 사용자가 요청할 경우 자기 회원 정보를 조회할 수 없다.")
+    @Test
+    void request_fail_member_me_unauthenticated() throws Exception {
+        String token = "";
+
+        ResultActions response = mockMvc.perform(get("/members/me")
+                .header("Authorization", "Basic " + token)
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+        );
+
+        response.andExpect(status().isUnauthorized());
+    }
+
+    @DisplayName("인증되지 않은 사용자가 요청할 경우 자기 회원 정보를 조회할 수 없다.")
+    @Test
+    void request_fail_member_me_unauthorized() throws Exception {
+        String token = Base64.getEncoder()
+                .encodeToString((TEST_USER_MEMBER.getEmail() + ":" + "invalidpassword").getBytes());
+
+        ResultActions response = mockMvc.perform(get("/members/me")
+                .header("Authorization", "Basic " + token)
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+        );
+
+        response.andExpect(status().isUnauthorized());
+    }
+
 }
